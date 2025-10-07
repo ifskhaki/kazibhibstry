@@ -235,11 +235,8 @@ void usage()
     printf("--stride N              Increment by N keys at a time\n");
     printf("--share M/N             Divide the keyspace into N equal shares, process the Mth share\n");
     printf("--continue FILE         Save/load progress from FILE\n");
-}
+    printf("--random256             Generate random 256-bit keys (for pre-2012 wallets)\n");
 
-
-/**
- Finds default parameters depending on the device
  */
 typedef struct {
 	int threads;
@@ -477,8 +474,6 @@ bool parseShare(const std::string &s, uint32_t &idx, uint32_t &total)
     }
 
     return true;
-}
-
 int main(int argc, char **argv)
 {
 	bool optCompressed = false;
@@ -489,6 +484,7 @@ int main(int argc, char **argv)
     bool optBlocks = false;
     bool optPoints = false;
     bool optRandom64 = false;
+    bool optRandom256 = false;
 
     uint32_t shareIdx = 0;
     uint32_t numShares = 0;
@@ -541,6 +537,7 @@ int main(int argc, char **argv)
     parser.add("", "--share", true);
     parser.add("", "--stride", true);
     parser.add("", "--random64", false);
+    parser.add("", "--random256", false);
 
     try {
         parser.parse(argc, argv);
@@ -632,6 +629,8 @@ int main(int argc, char **argv)
                 _config.follow = true;
             } else if(optArg.equals("", "--random64")) {
                 optRandom64 = true;
+            } else if(optArg.equals("", "--random256")) {
+                optRandom256 = true;
             }
 
 		} catch(std::string err) {
@@ -676,8 +675,32 @@ int main(int argc, char **argv)
 		}
 	}
  
+    // If random256, generate truly random 256-bit keys for pre-2012 wallets
+    if(optRandom256) {
+        // Full 256-bit keyspace for pre-2012 wallets
+        _config.startKey = 1;
+        _config.endKey = secp256k1::N - 1;
+        
+        // Generate random 256-bit starting point
+        crypto::Rng rng;
+        unsigned char buf[32];
+        rng.get(buf, 32);
+        
+        // Convert to uint256
+        secp256k1::uint256 randomKey(buf, 32);
+        
+        // Ensure it's within valid range (1 to N-1)
+        if(randomKey.isZero() || randomKey.cmp(secp256k1::N) >= 0) {
+            randomKey = secp256k1::uint256(1);
+        }
+        
+        _config.nextKey = randomKey;
+        _config.startKey = randomKey;
+        
+        Logger::log(LogLevel::Info, "Random 256-bit mode: Starting at " + randomKey.toString(16));
+    }
     // If random64, constrain to 64-bit keyspace and randomize start
-    if(optRandom64) {
+    else if(optRandom64) {
         // 2^64 - 1
         secp256k1::uint256 max64("ffffffffffffffff");
         _config.startKey = 1;
