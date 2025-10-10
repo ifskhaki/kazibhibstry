@@ -474,6 +474,7 @@ bool parseShare(const std::string &s, uint32_t &idx, uint32_t &total)
     }
 
     return true;
+}
 int main(int argc, char **argv)
 {
 	bool optCompressed = false;
@@ -760,3 +761,4 @@ int main(int argc, char **argv)
     return run();
 
 }
+
