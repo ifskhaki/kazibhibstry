@@ -237,7 +237,7 @@ void usage()
     printf("--continue FILE         Save/load progress from FILE\n");
     printf("--random256             Generate random 256-bit keys (for pre-2012 wallets)\n");
 
- */
+}
 typedef struct {
 	int threads;
 	int blocks;
@@ -758,4 +758,5 @@ int main(int argc, char **argv)
     }
 
     return run();
+
 }
