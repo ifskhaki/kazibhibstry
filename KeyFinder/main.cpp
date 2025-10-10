@@ -697,7 +697,7 @@ int main(int argc, char **argv)
         }
         
         // Convert to uint256 (BigEndian byte order)
-        secp256k1::uint256 randomKey(words, secp256k1::BigEndian);
+        secp256k1::uint256 randomKey(words, secp256k1::uint256::BigEndian);
         
         // Ensure it's within valid range (1 to N-1)
         if(randomKey.isZero() || randomKey.cmp(secp256k1::N) >= 0) {
@@ -770,5 +770,6 @@ int main(int argc, char **argv)
     return run();
 
 }
+
 
 
