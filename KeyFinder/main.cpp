@@ -687,8 +687,17 @@ int main(int argc, char **argv)
         unsigned char buf[32];
         rng.get(buf, 32);
         
-        // Convert to uint256
-        secp256k1::uint256 randomKey(buf, 32);
+        // Convert unsigned char[32] to unsigned int[8] for uint256 constructor
+        unsigned int words[8];
+        for(int i = 0; i < 8; i++) {
+            words[i] = ((unsigned int)buf[i*4] << 24) |
+                      ((unsigned int)buf[i*4 + 1] << 16) |
+                      ((unsigned int)buf[i*4 + 2] << 8) |
+                      ((unsigned int)buf[i*4 + 3]);
+        }
+        
+        // Convert to uint256 (BigEndian byte order)
+        secp256k1::uint256 randomKey(words, secp256k1::BigEndian);
         
         // Ensure it's within valid range (1 to N-1)
         if(randomKey.isZero() || randomKey.cmp(secp256k1::N) >= 0) {
@@ -761,4 +770,5 @@ int main(int argc, char **argv)
     return run();
 
 }
+
 
